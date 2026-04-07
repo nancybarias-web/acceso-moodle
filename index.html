@@ -1,19 +1,201 @@
-La situación es la siguiente: tengo un grupo de tutores que acompañan los proyectos de innovación educativa de escuelas. Este grupo de 15 personas tiene diferentes niveles de habilidades informáticas. Habitualmente uso una planilla de Google sheets derivada de un formulario para el seguimiento de los proyectos pero este año migramos a Microsoft 365 y el Excel on line resulta más complicado para la mayoría de los tutores. Me gustaría saber si es posible crear una aplicación front end que tome los datos de la planilla de Excel que son los siguientes: 
-1- número de dictamen
-2- Título con enlace
-3- Nombre de la escuela
-4- temática priorizada 
-5- palabras clave 
-6- síntesis IA
-7- acompañamiento
-8- observaciones personales 
-9-corte Julio 
-10- evaluación final 
-11- condición 
-12- localidad 
-13- departamento 
-14- inspección 
-15- correo supervisión
-16- correo director 
-17- correo docente
-a modo de back end y que en esa aplicación los tutores puedan consultar información, filtrar datos, escribir comentarios de seguimiento, marcar tareas como cumplidas, etc.
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Proyectos - Innovación Educativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .project-card:hover { transform: translateY(-4px); transition: all 0.3s ease; }
+        .status-badge { font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Encabezado -->
+        <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800">Proyectos de Innovación</h1>
+                <p class="text-slate-500">Panel de acompañamiento para tutores</p>
+            </div>
+            <div class="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border">
+                <i class="fas fa-search text-slate-400 ml-2"></i>
+                <input type="text" id="globalSearch" onkeyup="filterProjects()" placeholder="Buscar escuela, dictamen o localidad..." 
+                       class="outline-none bg-transparent w-64 text-sm">
+            </div>
+        </header>
+
+        <!-- Filtros Rápidos -->
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button onclick="filterByTag('todos')" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium">Todos</button>
+            <button onclick="filterByTag('pendiente')" class="bg-white border text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50">Pendientes</button>
+            <button onclick="filterByTag('finalizado')" class="bg-white border text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50">Finalizados</button>
+        </div>
+
+        <!-- Grilla de Proyectos -->
+        <div id="projectGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Los proyectos se cargan aquí dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Modal de Detalles -->
+    <div id="projectModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8">
+            <div class="flex justify-between items-start mb-6">
+                <h2 id="modalTitle" class="text-2xl font-bold text-slate-800">Título del Proyecto</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
+            
+            <div id="modalContent" class="space-y-6">
+                <!-- Información detallada aquí -->
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-slate-100">
+                <h3 class="font-bold text-slate-800 mb-4 italic">Seguimiento del Tutor</h3>
+                <textarea id="tutorComments" placeholder="Escribe aquí las observaciones del seguimiento..." 
+                          class="w-full p-4 bg-slate-50 border rounded-xl h-32 focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                <button onclick="saveProgress()" class="mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors">
+                    Guardar Seguimiento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATOS DE EJEMPLO (Aquí puedes pegar los datos de tu Excel)
+        const projects = [
+            {
+                id: "D-001",
+                dictamen: "2024-001",
+                titulo: "Robótica en el Aula",
+                escuela: "Escuela Primaria N°12",
+                tematica: "Tecnología",
+                palabrasClave: "Arduino, Programación",
+                sintesis: "Implementación de kits de robótica para 6to grado.",
+                localidad: "Córdoba",
+                departamento: "Capital",
+                estado: "pendiente",
+                director: "Juan Pérez",
+                email: "director@escuela12.edu.ar"
+            },
+            {
+                id: "D-002",
+                dictamen: "2024-045",
+                titulo: "Huerta Orgánica Comunitaria",
+                escuela: "Colegio San Martín",
+                tematica: "Ambiente",
+                palabrasClave: "Sustentabilidad, Biología",
+                sintesis: "Creación de un espacio de cultivo gestionado por alumnos.",
+                localidad: "Río Cuarto",
+                departamento: "Río Cuarto",
+                estado: "finalizado",
+                director: "Marta Gómez",
+                email: "marta.g@colegiosm.edu.ar"
+            }
+        ];
+
+        let currentProjectId = null;
+
+        // Cargar proyectos en la pantalla principal
+        function loadProjects(data = projects) {
+            const grid = document.getElementById('projectGrid');
+            grid.innerHTML = '';
+
+            data.forEach(p => {
+                const card = `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 project-card shadow-sm cursor-pointer" onclick="openProject('${p.id}')">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="status-badge ${p.state === 'finalizado' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
+                                ${p.estado.toUpperCase()}
+                            </span>
+                            <span class="text-xs font-mono text-slate-400">#${p.dictamen}</span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 leading-tight mb-2">${p.titulo}</h3>
+                        <p class="text-sm text-slate-500 mb-4"><i class="fas fa-school mr-2"></i>${p.escuela}</p>
+                        <div class="flex items-center text-xs text-slate-400">
+                            <i class="fas fa-map-marker-alt mr-1"></i> ${p.localidad}, ${p.departamento}
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += card;
+            });
+        }
+
+        // Abrir detalles del proyecto
+        function openProject(id) {
+            const p = projects.find(item => item.id === id);
+            currentProjectId = id;
+            
+            document.getElementById('modalTitle').innerText = p.titulo;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <p class="text-slate-400 text-xs font-bold uppercase">Escuela</p>
+                        <p class="font-semibold text-slate-700">${p.escuela}</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <p class="text-slate-400 text-xs font-bold uppercase">Dictamen</p>
+                        <p class="font-semibold text-slate-700">${p.dictamen}</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg col-span-2">
+                        <p class="text-slate-400 text-xs font-bold uppercase">Síntesis IA</p>
+                        <p class="text-slate-600 leading-relaxed">${p.sintesis}</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <p class="text-slate-400 text-xs font-bold uppercase">Temática</p>
+                        <p class="text-slate-700">${p.tematica}</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <p class="text-slate-400 text-xs font-bold uppercase">Director/a</p>
+                        <p class="text-slate-700">${p.director}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Cargar comentario guardado
+            const savedNote = localStorage.getItem(`note_${id}`) || "";
+            document.getElementById('tutorComments').value = savedNote;
+
+            document.getElementById('projectModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('projectModal').classList.add('hidden');
+        }
+
+        function saveProgress() {
+            const note = document.getElementById('tutorComments').value;
+            localStorage.setItem(`note_${currentProjectId}`, note);
+            alert("¡Seguimiento guardado correctamente!");
+            closeModal();
+        }
+
+        function filterProjects() {
+            const term = document.getElementById('globalSearch').value.toLowerCase();
+            const filtered = projects.filter(p => 
+                p.titulo.toLowerCase().includes(term) || 
+                p.escuela.toLowerCase().includes(term) || 
+                p.localidad.toLowerCase().includes(term) ||
+                p.dictamen.includes(term)
+            );
+            loadProjects(filtered);
+        }
+
+        function filterByTag(tag) {
+            if(tag === 'todos') {
+                loadProjects();
+            } else {
+                const filtered = projects.filter(p => p.estado === tag);
+                loadProjects(filtered);
+            }
+        }
+
+        // Inicializar
+        window.onload = () => loadProjects();
+    </script>
+</body>
+</html>
