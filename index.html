@@ -1,173 +1,433 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Acceso Moodle - TMyEaD</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .glass-morphism {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        body {
-            background-color: #daf2d0;
-            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consulta de Acceso al Curso</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 1.5rem;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 1.2rem;
+    }
+
+    .input-group svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.3);
+      width: 16px;
+      height: 16px;
+      pointer-events: none;
+    }
+
+    input {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.75rem;
+      color: #fff;
+      font-size: 0.95rem;
+      padding: 0.75rem 1rem 0.75rem 2.6rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    input::placeholder { color: rgba(255,255,255,0.25); }
+
+    input:focus {
+      border-color: #4e8ef7;
+      background: rgba(78,142,247,0.1);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .divider span {
+      color: rgba(255,255,255,0.3);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    button {
+      width: 100%;
+      background: linear-gradient(135deg, #4e8ef7, #7c5cfc);
+      border: none;
+      border-radius: 0.75rem;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.85rem;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 0.3rem;
+    }
+
+    button:hover { opacity: 0.9; }
+    button:active { transform: scale(0.98); }
+
+    /* Result card */
+    #result {
+      display: none;
+      margin-top: 1.5rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 1rem;
+      padding: 1.25rem 1.25rem 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #result.error {
+      border-color: rgba(255, 80, 80, 0.4);
+      background: rgba(255, 80, 80, 0.06);
+    }
+
+    #result.error .result-title {
+      color: #ff7070;
+    }
+
+    .result-title {
+      color: #7cc8ff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .result-row:last-child { border-bottom: none; }
+
+    .result-label {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.8rem;
+    }
+
+    .result-value {
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .copy-btn {
+      width: auto;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.4rem;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      margin-top: 0;
+      letter-spacing: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      opacity: 1;
+    }
+
+    .copy-btn:active { transform: scale(0.95); }
+
+    .multiple-notice {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.35);
+      text-align: center;
+      margin-top: 0.75rem;
+    }
+
+    /* Navigation arrows for multiple results */
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .nav-btn {
+      width: auto;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.5rem;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+      margin-top: 0;
+      letter-spacing: 0;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.25;
+      cursor: default;
+    }
+
+    .nav-counter {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.8rem;
+    }
+  </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body>
 
-    <div class="max-w-md w-full glass-morphism rounded-2xl shadow-2xl p-8 transition-all duration-300">
-        <!-- Encabezado -->
-        <div class="text-center mb-8">
-            <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <i class="fas fa-key text-white text-2xl"></i>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-800">Acceso TMyEaD</h1>
-            <p class="text-gray-500 mt-2">Consulta tu usuario y contraseña de Moodle</p>
-        </div>
+<div class="card">
+  <div class="logo">
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="24" fill="url(#grad)"/>
+      <path d="M14 32V18l10-6 10 6v14l-10 6-10-6z" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+      <path d="M24 12v24M14 18l10 6 10-6" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#4e8ef7"/>
+          <stop offset="1" stop-color="#7c5cfc"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
 
-        <!-- Formulario de Búsqueda -->
-        <div class="space-y-4">
-            <div>
-                <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">Apellido o Correo Electrónico</label>
-                <div class="relative">
-                    <input type="text" id="searchInput" 
-                           placeholder="Ej: Castro o patricia@..."
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pl-11">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                </div>
-            </div>
-            
-            <button onclick="buscarUsuario()" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
-                <span>Buscar Credenciales</span>
-            </button>
-        </div>
+  <h1>Acceso al Curso</h1>
+  <p class="subtitle">Ingresá tu apellido o correo para obtener tus credenciales</p>
 
-        <!-- Área de Resultados -->
-        <div id="resultArea" class="mt-8 hidden fade-in">
-            <div class="border-t pt-6">
-                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Información Encontrada</h3>
-                
-                <div class="space-y-3">
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <p class="text-xs text-gray-500 mb-1">Nombre Completo</p>
-                        <p id="resFullName" class="font-medium text-gray-800">-</p>
-                    </div>
+  <label for="apellido">Apellido</label>
+  <div class="input-group">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+    <input type="text" id="apellido" placeholder="Ej: González" autocomplete="off" />
+  </div>
 
-                    <div class="grid grid-cols-1 gap-3">
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                            <p class="text-xs text-blue-600 font-bold mb-1 uppercase">Nombre de usuario (Columna C)</p>
-                            <div class="flex justify-between items-center">
-                                <p id="resUsername" class="text-lg font-mono font-bold text-blue-800">-</p>
-                                <button onclick="copyText('resUsername')" class="text-blue-400 hover:text-blue-600 transition-colors">
-                                    <i class="far fa-copy"></i>
-                                </button>
-                            </div>
-                        </div>
+  <div class="divider"><span>o</span></div>
 
-                        <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                            <p class="text-xs text-green-600 font-bold mb-1 uppercase">Contraseña (Columna G)</p>
-                            <div class="flex justify-between items-center">
-                                <p id="resPassword" class="text-lg font-mono font-bold text-green-800">-</p>
-                                <button onclick="copyText('resPassword')" class="text-blue-400 hover:text-blue-600 transition-colors">
-                                    <i class="far fa-copy"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <label for="correo">Correo electrónico</label>
+  <div class="input-group">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+    </svg>
+    <input type="email" id="correo" placeholder="Ej: usuario@dominio.com" autocomplete="off" />
+  </div>
 
-        <!-- Mensaje de Error -->
-        <div id="errorArea" class="mt-6 hidden">
-            <div class="bg-red-50 text-red-700 p-4 rounded-xl flex items-center gap-3 border border-red-100">
-                <i class="fas fa-exclamation-circle text-lg"></i>
-                <p class="text-sm">No se encontraron registros. Verifica que el apellido o correo sea correcto.</p>
-            </div>
-        </div>
+  <button onclick="buscar()">Buscar credenciales</button>
 
-        <div class="mt-8 text-center text-xs text-gray-400">
-            <p>© 2024 Formulario de Inscripción TMyEaD</p>
-        </div>
+  <div id="result">
+    <div class="result-title" id="result-title">Tus credenciales</div>
+    <div id="result-body"></div>
+    <div id="nav-controls" class="nav-controls" style="display:none">
+      <button class="nav-btn" id="prev-btn" onclick="navResult(-1)">&#8592; Anterior</button>
+      <span class="nav-counter" id="nav-counter"></span>
+      <button class="nav-btn" id="next-btn" onclick="navResult(1)">Siguiente &#8594;</button>
     </div>
+  </div>
+</div>
 
-    <script>
-        // Datos sincronizados con el CSV cargado originalmente
-        const userData = [
-            {"lastname": "Castro", "firstname": "Patricia Inés", "username": "33762445", "email": "patriciainescastro27@gmail.com", "password": "Saa_33762445"},
-            {"lastname": "Szpiczak", "firstname": "MARIA CRISTINA", "username": "21912993", "email": "cristina_ma_sz@hotmail.com", "password": "Saa_21912993"},
-            {"lastname": "Navas Montes", "firstname": "Yonaiker", "username": "0960253284", "email": "ynavas@ueb.edu.ec", "password": "Saa_0960253284"},
-            {"lastname": "Weisz", "firstname": "Rosa María", "username": "22198173", "email": "rosa.weisz@uner.edu.ar", "password": "Saa_22198173"},
-            {"lastname": "Triminio Lopez", "firstname": "Henry Mauricio", "username": "0701197814484", "email": "henry.triminio@unah.edu.hn", "password": "Saa_0701197814484"},
-            {"lastname": "Tandetzki", "firstname": "Georgina Adriana", "username": "22342994", "email": "gigi.tande@gmail.com", "password": "Saa_22342994"},
-            {"lastname": "Coba Torres", "firstname": "Rommel Sebastian", "username": "1723003354", "email": "rcoba@ueb.edu.ec", "password": "Saa_1723003354"},
-            {"lastname": "Duedra", "firstname": "Julieta", "username": "0933111213", "email": "julieta.duedra@gmail.com", "password": "Saa_0933111213"},
-            {"lastname": "Uhrich Medina", "firstname": "Indiana Fabricia", "username": "37080731", "email": "indiana.uhrichmedina@uner.edu.ar", "password": "Saa_37080731"},
-            {"lastname": "MONGE AMORES", "firstname": "LOURDES ELENA", "username": "ci0501377469", "email": "emonge@udet.edu.ec", "password": "Saa_ci0501377469"},
-            {"lastname": "Benitez", "firstname": "Melina Abigail", "username": "43293233", "email": "migiame2018@gmail.com", "password": "Saa_43293233"},
-            {"lastname": "Pérez Moreno", "firstname": "Elena Silvia", "username": "18177289", "email": "elena.perez.moreno.289@unc.edu.ar", "password": "Saa_18177289"},
-            {"lastname": "Tapia Kwiecien", "firstname": "Martín", "username": "28654815", "email": "martin.tapia.kwiecien@unc.edu.ar", "password": "Saa_28654815"},
-            {"lastname": "Sotelo", "firstname": "Eva", "username": "29135476", "email": "esotelo@unc.edu.ar", "password": "Saa_29135476"}
-        ];
+<script>
+const DATA = [{"lastname":"Castro","email":"patriciainescastro27@gmail.com","username":"33762445","password":"Saa_33762445"},{"lastname":"Szpiczak","email":"cristina_ma_sz@hotmail.com","username":"21912993","password":"Saa_21912993"},{"lastname":"Navas Montes","email":"ynavas@ueb.edu.ec","username":"960253284","password":"Saa_0960253284"},{"lastname":"Weisz","email":"rosa.weisz@uner.edu.ar","username":"22198173","password":"Saa_22198173"},{"lastname":"Triminio Lopez","email":"henry.triminio@unah.edu.hn","username":"701197814484","password":"Saa_0701197814484"},{"lastname":"Tandetzki ","email":"gigi.tande@gmail.com","username":"22342994","password":"Saa_22342994"},{"lastname":"Coba Torres","email":"rcoba@ueb.edu.ec","username":"1723003354","password":"Saa_1723003354"},{"lastname":"Laurenz ","email":"rlaurenz@gmail.com","username":"34925234","password":"Saa_34925234"},{"lastname":"Rodriguez","email":"norma.rodriguez.926@unc.edu.ar","username":"22374926","password":"Saa_22374926"},{"lastname":"Guerra Maiguashca ","email":"gabriela.guerra@ueb.edu.ec","username":"201590849","password":"Saa_0201590849"},{"lastname":"Bravo","email":"mara.bravo@uner.edu.ar","username":"34581570","password":"Saa_34581570"},{"lastname":"Duedrq","email":"maria.duedra@ueb.edu.ec","username":"933111213","password":"Saa_0933111213"},{"lastname":"Albán Trujillo","email":"palban@ueb.edu.ec","username":"201581196","password":"Saa_0201581196"},{"lastname":"Lopez","email":"jesica.lopez@uner.edu.ar","username":"30188328","password":"Saa_30188328"},{"lastname":"Alday","email":"romina.alday@unc.edu.ar","username":"27173104","password":"Saa_27173104"},{"lastname":"Verdezoto Aguiar","email":"nverdezoto@ueb.edu.ec","username":"201431020","password":"Saa_0201431020"},{"lastname":"GAVILANEZ CARDENAS","email":"cgavilanez@ueb.edu.ec","username":"201861986","password":"Saa_0201861986"},{"lastname":"Barrios","email":"adriana.barrios@uner.edu.ar","username":"21423401","password":"Saa_21423401"},{"lastname":"Triminio Lopez","email":"henrytriminio@gmail.com","username":"801197814484","password":"Saa_0801197814484"},{"lastname":"Gómez Llanes ","email":"eliana.llanes@unc.edu.ar","username":"27378949","password":"Saa_27378949"},{"lastname":"Müller","email":"alexia.muller@uner.edu.ar","username":"37703127","password":"Saa_37703127"},{"lastname":"FIERRO SALTOS","email":"wfierro@ueb.edu.ec","username":"201384278","password":"Saa_0201384278"},{"lastname":"Szpiczak ","email":"cristina_ma_sz@hotmail.com","username":"21912993","password":"Saa_21912993"},{"lastname":"Lopez Diaz ","email":"iclopez@udet.edu.ec","username":"603958182","password":"Saa_0603958182"},{"lastname":"Burgos Sanchez","email":"mariaesperanza.burgossanchez@uner.edu.ar","username":"32142094","password":"Saa_32142094"},{"lastname":"ASADOBAY GUASHPA","email":"pasadobay@udet.edu.ec","username":"603002502","password":"Saa_0603002502"},{"lastname":"PAEZ COELLO","email":"xpaez@udet.edu.ec","username":"1708718885","password":"Saa_1708718885"},{"lastname":"Recalde Recalde","email":"wallas1105@gmail.com","username":"1716661820","password":"Saa_1716661820"},{"lastname":"ERAZO SANCHEZ","email":"averazo@udet.edu.ec","username":"1714155015","password":"Saa_1714155015"},{"lastname":"ZHUNIO ARMAS","email":"bzhunio@udet.edu.ec","username":"1707043954","password":"Saa_1707043954"},{"lastname":"Cadena Echeverría","email":"gcadena@udet.edu.ec","username":"400508800","password":"Saa_0400508800"},{"lastname":"Vega Hernández","email":"orisvelvega@gmail.com","username":"1756780639","password":"Saa_1756780639"},{"lastname":"Crespo Nuñez","email":"xcrespo@udet.edu.ec","username":"1711117836","password":"Saa_1711117836"},{"lastname":"Garzón Mosquera","email":"fgarzon@udet.edu.ec","username":"1724200553","password":"Saa_1724200553"},{"lastname":"González Amagua","email":"jegonzalez@udet.edu.ec","username":"1711840403","password":"Saa_1711840403"},{"lastname":"Céparo","email":"emma.ceparo@uner.edu.ar","username":"29447629","password":"Saa_29447629"},{"lastname":"MARTINEZ CAMPAÑA","email":"cmartinez@udet.edu.ec","username":"1801994060","password":"Saa_1801994060"},{"lastname":"BOHL","email":"ricardorbohl@gmail.com","username":"36318305","password":"Saa_36318305"},{"lastname":"ERAZO GUERRÓN","email":"nerazo@udet.edu.ec","username":"1705362349","password":"Saa_1705362349"},{"lastname":"VELEZ TEJADA","email":"mvelez@udet.edu.ec","username":"1802732071","password":"Saa_1802732071"},{"lastname":"HERRERA DÍAZ","email":"sherrera@udet.edu.ec","username":"1707916571","password":"Saa_1707916571"},{"lastname":"Mendoza Yépez ","email":"mmendoza@udet.edu.ec","username":"1001676806","password":"Saa_1001676806"},{"lastname":"Lasso Barreto","email":"slasso@udet.edu.ec","username":"1706487228","password":"Saa_1706487228"},{"lastname":"Abdala","email":"sabrina.abdala@uner.edu.ar","username":"36406439","password":"Saa_36406439"},{"lastname":"Ochoa Quezada","email":"vochoa@udet.edu.ec","username":"502129513","password":"Saa_0502129513"},{"lastname":"Paredes Vasconez ","email":"gparedes@udet.edu.ec","username":"502413255","password":"Saa_0502413255"},{"lastname":"Alvarez ","email":"santiago.ma.alvarez@gmail.com","username":"36354894","password":"Saa_36354894"},{"lastname":"Duedra","email":"julieta.duedra@gmail.com","username":"933111213","password":"Saa_0933111213"},{"lastname":"Uhrich Medina","email":"indiana.uhrichmedina@uner.edu.ar","username":"37080731","password":"Saa_37080731"},{"lastname":"MONGE AMORES","email":"emonge@udet.edu.ec","username":"ci0501377469","password":"Saa_ci0501377469"},{"lastname":"Benitez","email":"migiame2018@gmail.com","username":"43293233","password":"Saa_43293233"},{"lastname":"Pérez Moreno","email":"elena.perez.moreno.289@unc.edu.ar","username":"18177289","password":"Saa_18177289"},{"lastname":"Tapia Kwiecien","email":"martin.tapia.kwiecien@unc.edu.ar","username":"28654815","password":"Saa_28654815"},{"lastname":"Sotelo","email":"esotelo@unc.edu.ar","username":"29135476","password":"Saa_29135476"},{"lastname":"Cachagua Ibañez ","email":"silvia.cachagua@unc.edu.ar","username":"23946124","password":"Saa_23946124"},{"lastname":"González Amagua","email":"jegonzalez@udet.edu.ec","username":"1711840403","password":"Saa_1711840403"},{"lastname":"Foti ","email":"malenafoti23@gmail.com","username":"40702933","password":"Saa_40702933"},{"lastname":"Gomez","email":"briankaquin@gmail.com","username":"38516542","password":"Saa_38516542"},{"lastname":"Caballero Albarado","email":"lucas.caballero@uner.edu.ar","username":"35441734","password":"Saa_35441734"},{"lastname":"Laurens","email":"denise.laurens@uner.edu.ar","username":"31918358","password":"Saa_31918358"},{"lastname":"Bertona","email":"vanina.bertona@uner.edu.ar","username":"27320320","password":"Saa_27320320"}];
 
-        function buscarUsuario() {
-            const input = document.getElementById('searchInput').value.trim().toLowerCase();
-            const resultArea = document.getElementById('resultArea');
-            const errorArea = document.getElementById('errorArea');
+let matches = [];
+let currentIndex = 0;
 
-            if (!input) {
-                resultArea.classList.add('hidden');
-                errorArea.classList.add('hidden');
-                return;
-            }
+function normalize(str) {
+  return (str || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
 
-            // Normalización para evitar errores por espacios en los datos fuente
-            const user = userData.find(u => {
-                const searchLname = u.lastname.trim().toLowerCase();
-                const searchEmail = u.email.trim().toLowerCase();
-                return searchLname.includes(input) || searchEmail === input;
-            });
+function buscar() {
+  const apellido = document.getElementById('apellido').value.trim();
+  const correo   = document.getElementById('correo').value.trim();
+  const result   = document.getElementById('result');
 
-            if (user) {
-                document.getElementById('resFullName').innerText = `${user.lastname}, ${user.firstname}`;
-                document.getElementById('resUsername').innerText = user.username;
-                document.getElementById('resPassword').innerText = user.password;
-                
-                resultArea.classList.remove('hidden');
-                errorArea.classList.add('hidden');
-            } else {
-                resultArea.classList.add('hidden');
-                errorArea.classList.remove('hidden');
-            }
-        }
+  if (!apellido && !correo) {
+    showError('Por favor ingresá tu apellido o correo electrónico.');
+    return;
+  }
 
-        function copyText(elementId) {
-            const text = document.getElementById(elementId).innerText;
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            
-            const btn = event.currentTarget;
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check text-green-500"></i>';
-            setTimeout(() => btn.innerHTML = originalHTML, 2000);
-        }
+  matches = DATA.filter(row => {
+    if (correo) {
+      return normalize(row.email) === normalize(correo);
+    }
+    return normalize(row.lastname).includes(normalize(apellido));
+  });
 
-        document.getElementById('searchInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') buscarUsuario();
-        });
-    </script>
+  // Deduplicate by username
+  const seen = new Set();
+  matches = matches.filter(r => {
+    if (seen.has(r.username)) return false;
+    seen.add(r.username);
+    return true;
+  });
+
+  if (matches.length === 0) {
+    showError('No se encontraron resultados. Verificá los datos ingresados.');
+    return;
+  }
+
+  currentIndex = 0;
+  showResult();
+}
+
+function showResult() {
+  const result = document.getElementById('result');
+  const body   = document.getElementById('result-body');
+  const nav    = document.getElementById('nav-controls');
+  const title  = document.getElementById('result-title');
+
+  result.className = '';
+  result.style.display = 'block';
+  title.textContent = matches.length > 1
+    ? `Resultado ${currentIndex + 1} de ${matches.length}`
+    : 'Tus credenciales';
+
+  const m = matches[currentIndex];
+  body.innerHTML = `
+    <div class="result-row">
+      <span class="result-label">Usuario</span>
+      <span class="result-value">
+        <span id="val-user">${m.username}</span>
+        <button class="copy-btn" onclick="copyVal('val-user', this)">Copiar</button>
+      </span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Contraseña</span>
+      <span class="result-value">
+        <span id="val-pass">${m.password}</span>
+        <button class="copy-btn" onclick="copyVal('val-pass', this)">Copiar</button>
+      </span>
+    </div>
+  `;
+
+  if (matches.length > 1) {
+    nav.style.display = 'flex';
+    document.getElementById('nav-counter').textContent = `${currentIndex + 1} / ${matches.length}`;
+    document.getElementById('prev-btn').disabled = currentIndex === 0;
+    document.getElementById('next-btn').disabled = currentIndex === matches.length - 1;
+  } else {
+    nav.style.display = 'none';
+  }
+}
+
+function navResult(dir) {
+  currentIndex = Math.max(0, Math.min(matches.length - 1, currentIndex + dir));
+  showResult();
+}
+
+function showError(msg) {
+  const result = document.getElementById('result');
+  const body   = document.getElementById('result-body');
+  const title  = document.getElementById('result-title');
+  const nav    = document.getElementById('nav-controls');
+
+  result.className = 'error';
+  result.style.display = 'block';
+  nav.style.display = 'none';
+  title.textContent = 'Sin resultados';
+  body.innerHTML = `<p style="color:rgba(255,255,255,0.6);font-size:0.9rem;padding:0.25rem 0">${msg}</p>`;
+}
+
+function copyVal(id, btn) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+// Allow Enter key on inputs
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscar();
+});
+</script>
+
 </body>
 </html>
